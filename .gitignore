@@ -5,7 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
-
+.env
+/data/*.jsonl
+/data/*.csv
+__pycache__/
+*.pyc
+*.log
+.vscode/
 # Distribution / packaging
 .Python
 build/
