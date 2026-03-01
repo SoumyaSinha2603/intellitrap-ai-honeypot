@@ -1,5 +1,9 @@
 IntelliTrap – Behavioral Threat Intelligence Honeypot Framework
+
+
 📌 Overview
+
+
 IntelliTrap is an AI-driven behavioral threat intelligence honeypot framework designed to detect reconnaissance, probing, and automated attacks through adaptive deception and risk-based profiling.
 Unlike traditional honeypots that only collect logs, IntelliTrap performs:
 Behavioral feature extraction
@@ -9,6 +13,8 @@ Real-time dashboard visualization
 The system is designed as a deployable prototype that can evolve into a lightweight security analytics solution for small and medium enterprises (SMEs).
 
 🎯 Core Objectives :- 
+
+
 Simulate realistic web application endpoints to attract attackers
 Log and analyze behavioral patterns instead of attacker identity
 Convert raw logs into structured behavioral feature
@@ -17,9 +23,13 @@ Adapt system responses dynamically based on threat level
 Provide visual threat intelligence via dashboard
 
 🏗 System Architecture :- 
+
 IntelliTrap operates in layered stages:
+
 1️⃣ Honeypot Layer :- 
 Fake endpoints (login, admin, API config, file routes) simulate a real system to attract malicious activity.
+
+
 2️⃣ Middleware Logging :-
 Every incoming request is captured:
 IP address
@@ -29,6 +39,8 @@ User agent
 Payload
 Timestamp
 Raw events are stored in structured log files.
+
+
 3️⃣ Feature Engineering :- 
 Logs are grouped into sessions and converted into behavioral metrics such as:
 request_count
@@ -37,17 +49,23 @@ avg_time_gap
 sql_keyword_count
 payload characteristics
 session-based behavioral vectors
+
+
 4️⃣ Risk Scoring Engine :- 
 A transparent scoring logic computes a threat score between 0–100.
 Threat Levels:
 LOW (0–29)
 MEDIUM (30–69)
 HIGH (70–100)
+
+
 5️⃣ Adaptive Response :- 
 System behavior changes based on risk:
 Modified responses
 Controlled information leakage
 Deceptive configuration outputs
+
+
 6️⃣ Dashboard Layer :- 
 Real-time visualization includes:
 Current threat level
