@@ -13,10 +13,6 @@ ml/*.pkl
 ml/*.h5
 ml/attacker_dataset.csv
 
-# Local analysis files
-codedump.txt
-structure.txt
-
 # IDE
 .vscode/
 
