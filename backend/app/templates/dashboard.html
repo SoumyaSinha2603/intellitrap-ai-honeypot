@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Adaptive AI Honeypot Dashboard</title>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        .timestamp {
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #020617;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        }
+
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .LOW { background: #16a34a; }
+        .MEDIUM { background: #f59e0b; }
+        .HIGH { background: #dc2626; }
+
+        .metric {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        /* Risk bar */
+        .bar {
+            height: 20px;
+            border-radius: 10px;
+            background: #1e293b;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #dc2626;
+            width: 0%;
+            transition: width 0.6s ease-in-out;
+        }
+
+        ul {
+            margin-left: 20px;
+        }
+
+        canvas {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🛡 Adaptive AI Honeypot Dashboard</h1>
+<p class="timestamp">Last updated: {{ timestamp }}</p>
+
+<div class="grid">
+
+    <!-- Threat Overview -->
+    <div class="card">
+        <h2>Threat Level</h2>
+        <span class="badge {{ risk_level }}">{{ risk_level }}</span>
+
+        <p class="metric">Risk Score: {{ risk_score }} / 100</p>
+
+        <div class="bar">
+            <div class="bar-fill" data-score="{{ risk_score }}"></div>
+        </div>
+    </div>
+
+    <!-- Activity Metrics -->
+    <div class="card">
+        <h2>Activity Metrics</h2>
+        <p class="metric">📊 Requests: {{ request_count }}</p>
+        <p class="metric">🧠 SQL Indicators: {{ sql_keyword_count }}</p>
+    </div>
+
+    <!-- Explainable AI -->
+    <div class="card">
+        <h2>Why this threat level?</h2>
+        <ul>
+            {% for reason in reasons %}
+            <li>{{ reason }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Adaptive Response -->
+    <div class="card">
+        <h2>Adaptive Honeypot Response</h2>
+        <ul>
+            {% for action in adaptive_response %}
+            <li>✔ {{ action }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- System Health -->
+    <div class="card">
+        <h2>System Health</h2>
+        <ul>
+            {% for key, value in system_status.items() %}
+            <li>{{ key }}: {{ value }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Risk Trend Graph -->
+    <div class="card">
+        <h2>📈 Risk Score Over Time</h2>
+        <canvas id="riskChart"></canvas>
+    </div>
+
+</div>
+
+<!-- Scripts -->
+<!-- Jinja-safe JSON data -->
+<script type="application/json" id="risk-data">
+{
+  "labels": {{ session_labels | tojson }},
+  "scores": {{ risk_scores | tojson }}
+}
+</script>
+
+<script>
+    /* ---------------- Risk bar animation ---------------- */
+    document.querySelectorAll(".bar-fill").forEach(bar => {
+        bar.style.width = bar.dataset.score + "%";
+    });
+
+    /* ---------------- Parse graph data safely ---------------- */
+    const riskDataElement = document.getElementById("risk-data");
+    const riskData = JSON.parse(riskDataElement.textContent);
+
+    const ctx = document.getElementById("riskChart");
+
+    if (ctx) {
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: riskData.labels,
+                datasets: [{
+                    label: "Risk Score",
+                    data: riskData.scores,
+                    borderColor: "#dc2626",
+                    backgroundColor: "rgba(220,38,38,0.25)",
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: "#e5e7eb" }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: "#e5e7eb" }
+                    },
+                    y: {
+                        min: 0,
+                        max: 100,
+                        ticks: { color: "#e5e7eb" }
+                    }
+                }
+            }
+        });
+    }
+
+    /* ---------------- Auto refresh ---------------- */
+    setTimeout(() => {
+        window.location.reload();
+    }, 10000);
+</script>

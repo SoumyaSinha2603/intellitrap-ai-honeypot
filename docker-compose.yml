@@ -1,0 +1,8 @@
+services:
+  honeypot:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./ml:/app/ml   
