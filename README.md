@@ -1,170 +1,60 @@
-IntelliTrap – Behavioral Threat Intelligence Honeypot Framework
+# IntelliTrap — adaptive AI honeypot
 
+A honeypot backend that scores an attacker session by combining three independent signals rather
+than trusting any one of them: a supervised classifier over request-log features, an unsupervised
+anomaly score, and a sequence model over the attacker's request path.
 
-📌 Overview
+> **Status — early prototype.** Docker-stable at v1.0 and not developed since March 2026. The
+> blend weights below are hand-set, not fitted, and there is **no held-out evaluation of the
+> threat score**. Read this as an architecture sketch, not a result. The evaluated, six-person
+> continuation of this line of work is
+> [adaptive-honeypot-security-system](https://github.com/SoumyaSinha2603/adaptive-honeypot-security-system).
 
+## The threat score
 
-IntelliTrap is an AI-driven behavioral threat intelligence honeypot framework designed to detect reconnaissance, probing, and automated attacks through adaptive deception and risk-based profiling.
-Unlike traditional honeypots that only collect logs, IntelliTrap performs:
-Behavioral feature extraction
-Risk scoring based on attacker patterns
-Adaptive response based on threat level
-Real-time dashboard visualization
-The system is designed as a deployable prototype that can evolve into a lightweight security analytics solution for small and medium enterprises (SMEs).
+Three signals blended into a 0–100 score (`ml/threat_scoring.py`):
 
-🎯 Core Objectives :- 
+| Weight | Signal | Model |
+| --- | --- | --- |
+| 0.5 | Probability the session's request log is malicious | Supervised classifier — `log_classifier.pkl` |
+| 0.3 | How far the session sits from normal traffic | Isolation Forest — `anomaly_detector.pkl` |
+| 0.2 | Session length relative to the longest observed | Heuristic on `request_count` |
 
+Separately, an LSTM (`ml/lstm_attack_path_model.h5`) is trained over request sequences to predict
+the attacker's **next step**. That is the piece intended to make the honeypot adaptive rather
+than a static classifier — it lets the environment be shaped ahead of where the attacker is going.
 
-Simulate realistic web application endpoints to attract attackers
-Log and analyze behavioral patterns instead of attacker identity
-Convert raw logs into structured behavioral feature
-Calculate explainable risk scores (0–100)
-Adapt system responses dynamically based on threat level
-Provide visual threat intelligence via dashboard
+## Features
 
-🏗 System Architecture :- 
+Five per-session features, in `ml/attacker_dataset.csv`:
 
-IntelliTrap operates in layered stages:
+`request_count` · `unique_endpoints` · `avg_time_gap` · `avg_payload_entropy` · `sql_keyword_count`
 
-1️⃣ Honeypot Layer :- 
-Fake endpoints (login, admin, API config, file routes) simulate a real system to attract malicious activity.
+## Layout
 
+```
+backend/app/
+  routes/        api, auth, admin, files, threat
+  core/          threat_state, threat_updater, logger
+  models/        event
+ml/
+  feature_engineering.py   sequence_builder.py
+  train_classifier.py      train_anomaly_detector.py
+  lstm_train.py            predict_next_step.py
+  threat_scoring.py        blends the three signals
+data/logs/
+```
 
-2️⃣ Middleware Logging :-
-Every incoming request is captured:
-IP address
-Endpoint
-HTTP method
-User agent
-Payload
-Timestamp
-Raw events are stored in structured log files.
+FastAPI backend, `docker-compose up` to run.
 
+## Honest limitations
 
-3️⃣ Feature Engineering :- 
-Logs are grouped into sessions and converted into behavioral metrics such as:
-request_count
-unique_endpoints
-avg_time_gap
-sql_keyword_count
-payload characteristics
-session-based behavioral vectors
-
-
-4️⃣ Risk Scoring Engine :- 
-A transparent scoring logic computes a threat score between 0–100.
-Threat Levels:
-LOW (0–29)
-MEDIUM (30–69)
-HIGH (70–100)
-
-
-5️⃣ Adaptive Response :- 
-System behavior changes based on risk:
-Modified responses
-Controlled information leakage
-Deceptive configuration outputs
-
-
-6️⃣ Dashboard Layer :- 
-Real-time visualization includes:
-Current threat level
-Risk score
-Session statistics
-Risk trends over time
-
-📂 Project Structure :- 
-backend/          → FastAPI application core
-ml/               → Feature engineering & ML logic
-data/             → Logs and generated datasets
-tests/            → Attack simulation scripts
-Dockerfile        → Container configuration
-docker-compose.yml → Multi-service orchestration (if used)
-
-🚀 How To Run The Project 
-
-
-1️⃣ Clone the repository :- 
-git clone <your-repo-link>
-cd intellitrap-ai-honeypot
-2️⃣ Build Docker Image :- 
-docker build -t honeypot .
-3️⃣ Run the Container :- 
-docker run -p 8000:8000 honeypot
-4️⃣ Access in Browser :- 
-http://localhost:8000
-http://localhost:8000/docs
-http://localhost:8000/dashboard
-
-🛠 Tech Stack
-FastAPI
-Python 3.10
-Docker
-Pandas
-Scikit-learn
-Jinja2
-Chart.js
-
-🔄 Development Workflow
-
-We follow a structured Git workflow:
-main → Stable release (protected)
-develop → Integration branch
-feature/* → Individual module branches
-No direct pushes to main or develop.
-Development Process:
-1.Checkout develop
-2.Create feature branch
-3.Implement and test locally
-4.Push branch
-5.Create Pull Request to develop
-
-📊 Current Status
-
-
-Fully Dockerized and deployable
-Working adaptive honeypot engine
-Behavioral risk scoring implemented
-Live dashboard operational
-Modular architecture ready for expansion
-
-🌱 Future Scope
-
-
-Behavioral fingerprint hashing for attacker session profiling
-Threat heatmap visualization
-Risk trend forecasting
-SaaS deployment model for SMEs
-SIEM integration capability
-Advanced anomaly detection models
-
-🎓 Academic Context
-
-
-This project is developed as a structured academic mini-project with an emphasis on:
-Clean architecture
-Explainable AI-based risk scoring
-Business-oriented system framing
-Collaborative Git-based development workflow
-
-👥 Team Collaboration
-
-
-Each team member owns a specific module:
-Honeypot endpoints
-Logging improvements
-Feature engineering
-Risk engine refinement
-Dashboard enhancement
-Documentation and testing
-All contributors must:
-Understand their module
-Test changes locally
-Create Pull Requests
-Be able to explain their contribution during evaluation
-
-🧠 Final Positioning
-
-
-IntelliTrap is not just a honeypot.
-It is a behavioral threat intelligence prototype that demonstrates how adaptive deception and explainable risk scoring can evolve into deployable security analytics solutions.
+- **The dataset is small and imbalanced** — 291 sessions, 36 of them labelled malicious. That is
+  too little to support a claimed detection rate, which is why none is claimed here.
+- **The blend weights (0.5 / 0.3 / 0.2) were chosen by hand.** They are a starting point, not a
+  tuned result.
+- **No held-out evaluation.** Nothing here reports precision, recall, or AUROC, because nothing
+  here was measured on data the models had not seen.
+- **`/api/threat/status` reads the most recent CSV row** rather than scoring live traffic — the
+  serving path is a stub.
+- The LSTM's next-step predictions are not wired into the honeypot's response behaviour yet.
